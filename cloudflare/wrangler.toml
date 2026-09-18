@@ -5,7 +5,7 @@ compatibility_date = "2026-09-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "theo"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "b935c704-16ed-4418-837d-ad06fa612662"
 
 [vars]
 ACCESS_TOKEN_TTL_SECONDS = "900"
