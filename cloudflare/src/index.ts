@@ -4,11 +4,17 @@ import { D1SubscriptionService } from "./subscription";
 
 export interface Env {
   DB: D1Database;
+
   JWT_SECRET: string;
+
   WEBHOOK_SECRET?: string;
+
   ACCESS_TOKEN_TTL_SECONDS?: string;
+
   REFRESH_TOKEN_TTL_SECONDS?: string;
+
   TRIAL_DAYS?: string;
+
   ALLOWED_ORIGIN?: string;
 }
 
@@ -55,19 +61,19 @@ function jsonResponse(body: unknown, status = 200, env?: Env): Response {
   });
 }
 
-function now() {
+function now(): Date {
   return new Date();
 }
 
-function iso(date = now()) {
+function iso(date = now()): string {
   return date.toISOString();
 }
 
-function uuid() {
+function uuid(): string {
   return crypto.randomUUID();
 }
 
-function b64url(bytes: Uint8Array) {
+function b64url(bytes: Uint8Array): string {
   let binary = "";
 
   for (const byte of bytes) {
@@ -77,25 +83,27 @@ function b64url(bytes: Uint8Array) {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function b64urlText(text: string) {
+function b64urlText(text: string): string {
   return b64url(encoder.encode(text));
 }
 
-function fromB64url(value: string) {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((value.length + 3) % 4);
+function fromB64url(value: string): Uint8Array {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
 
-  const binary = atob(padded);
+  const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
 
-  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
+  const binary = atob(normalized + padding);
+
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
-async function sha256Hex(value: string) {
+async function sha256Hex(value: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", encoder.encode(value));
 
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-async function hmac(secret: string, data: string) {
+async function hmac(secret: string, data: string): Promise<Uint8Array> {
   const key = await crypto.subtle.importKey(
     "raw",
     encoder.encode(secret),
@@ -110,7 +118,7 @@ async function hmac(secret: string, data: string) {
   return new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(data)));
 }
 
-async function signJwt(claims: AuthClaims, secret: string) {
+async function signJwt(claims: AuthClaims, secret: string): Promise<string> {
   const header = b64urlText(
     JSON.stringify({
       alg: "HS256",
@@ -147,6 +155,7 @@ async function verifyJwt(token: string, secret: string): Promise<AuthClaims | nu
       claims.type !== "access" ||
       !claims.sub ||
       !claims.sid ||
+      !Number.isFinite(claims.exp) ||
       claims.exp <= Math.floor(Date.now() / 1000)
     ) {
       return null;
@@ -158,34 +167,60 @@ async function verifyJwt(token: string, secret: string): Promise<AuthClaims | nu
   }
 }
 
-async function randomToken() {
+async function randomToken(): Promise<string> {
   return b64url(crypto.getRandomValues(new Uint8Array(32)));
 }
 
-async function hashPassword(password: string) {
+/**
+ * Cloudflare Workers suporta PBKDF2, mas o runtime rejeita
+ * (NotSupportedError) iteration counts acima de 100.000.
+ *
+ * Esta é a ÚNICA constante que define o número de iterações.
+ * Nunca use um número literal em outro lugar do código — se
+ * alguém subir esse valor por engano, o Math.min abaixo evita
+ * que a aplicação quebre em produção (o pior cenário: senhas
+ * ficam com um pouco menos de iterações do que o pretendido,
+ * em vez de o cadastro/login inteiro falhar com 500).
+ */
+const PBKDF2_MAX_ITERATIONS = 100_000;
+const PBKDF2_ITERATIONS = Math.min(100_000, PBKDF2_MAX_ITERATIONS);
+
+async function hashPassword(password: string): Promise<string> {
   const salt = b64url(crypto.getRandomValues(new Uint8Array(16)));
 
-  const iterations = 120_000;
+  const iterations = PBKDF2_ITERATIONS;
 
-  const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, [
-    "deriveBits",
-  ]);
+  try {
+    const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, [
+      "deriveBits",
+    ]);
 
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      salt: encoder.encode(salt),
-      iterations,
-      hash: "SHA-256",
-    },
-    key,
-    256,
-  );
+    const bits = await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt: encoder.encode(salt),
+        iterations,
+        hash: "SHA-256",
+      },
+      key,
+      256,
+    );
 
-  return `pbkdf2-sha256$${iterations}$${salt}$${b64url(new Uint8Array(bits))}`;
+    return ["pbkdf2-sha256", iterations, salt, b64url(new Uint8Array(bits))].join("$");
+  } catch (error) {
+    // Nunca deixa uma exceção de crypto.subtle vazar como um erro
+    // "cru" do runtime (que pode não carregar os headers de CORS).
+    // Ela vira uma Error normal do JS, tratada pelo try/catch do
+    // fetch() handler, que sempre responde via jsonResponse(...).
+    throw new Error(
+      `Falha ao gerar hash de senha (PBKDF2, ${iterations} iterações): ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
 }
 
-async function verifyPassword(password: string, stored: string) {
+async function verifyPassword(password: string, stored: string): Promise<boolean> {
   const [scheme, iterationsText, salt, expected] = stored.split("$");
 
   if (scheme !== "pbkdf2-sha256" || !iterationsText || !salt || !expected) {
@@ -194,26 +229,30 @@ async function verifyPassword(password: string, stored: string) {
 
   const iterations = Number(iterationsText);
 
-  if (!Number.isSafeInteger(iterations) || iterations < 100_000 || iterations > 1_000_000) {
+  if (!Number.isSafeInteger(iterations) || iterations < 1 || iterations > PBKDF2_MAX_ITERATIONS) {
     return false;
   }
 
-  const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, [
-    "deriveBits",
-  ]);
+  try {
+    const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, [
+      "deriveBits",
+    ]);
 
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      salt: encoder.encode(salt),
-      iterations,
-      hash: "SHA-256",
-    },
-    key,
-    256,
-  );
+    const bits = await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt: encoder.encode(salt),
+        iterations,
+        hash: "SHA-256",
+      },
+      key,
+      256,
+    );
 
-  return b64url(new Uint8Array(bits)) === expected;
+    return b64url(new Uint8Array(bits)) === expected;
+  } catch {
+    return false;
+  }
 }
 
 function accessFor(env: Env, user: UserRow) {
@@ -256,18 +295,26 @@ function publicUser(env: Env, user: UserRow) {
     email: user.email,
     city: user.city,
     country: user.country,
+
     email_verified: Boolean(user.email_verified_at),
+
     totp_enabled: Boolean(user.totp_enabled),
+
     role: user.role,
+
     subscription_status: access.status,
+
     subscription_expires_at: access.expires_at,
+
     trial_started_at: user.trial_started_at,
+
     trial_expires_at: user.trial_expires_at,
+
     access_allowed: access.allowed,
   };
 }
 
-async function requireAuth(request: Request, env: Env) {
+async function requireAuth(request: Request, env: Env): Promise<UserRow | null> {
   const header = request.headers.get("authorization") ?? "";
 
   if (!header.startsWith("Bearer ")) {
@@ -282,16 +329,16 @@ async function requireAuth(request: Request, env: Env) {
 
   const session = await env.DB.prepare(
     `
-      SELECT
-        id,
-        user_id
-      FROM sessions
-      WHERE
-        id = ?
-        AND user_id = ?
-        AND revoked_at IS NULL
-        AND expires_at > ?
-    `,
+        SELECT
+          id,
+          user_id
+        FROM sessions
+        WHERE
+          id = ?
+          AND user_id = ?
+          AND revoked_at IS NULL
+          AND expires_at > ?
+      `,
   )
     .bind(claims.sid, claims.sub, iso())
     .first<{
@@ -306,9 +353,13 @@ async function requireAuth(request: Request, env: Env) {
   return getUser(env, claims.sub);
 }
 
+/* =========================================================
+   TOTP / 2FA
+   ========================================================= */
+
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
-function base32Encode(bytes: Uint8Array) {
+function base32Encode(bytes: Uint8Array): string {
   let bits = 0;
   let value = 0;
   let output = "";
@@ -332,7 +383,7 @@ function base32Encode(bytes: Uint8Array) {
   return output;
 }
 
-function base32Decode(input: string) {
+function base32Decode(input: string): Uint8Array {
   const clean = input.replace(/=+$/g, "").replace(/\s+/g, "").toUpperCase();
 
   let bits = 0;
@@ -361,10 +412,15 @@ function base32Decode(input: string) {
   return new Uint8Array(bytes);
 }
 
-async function totpCode(secret: string, counter: number) {
+async function totpCode(secret: string, counter: number): Promise<string> {
+  const secretBytes = base32Decode(secret);
+
+  const secretBuffer = new ArrayBuffer(secretBytes.byteLength);
+  new Uint8Array(secretBuffer).set(secretBytes);
+
   const key = await crypto.subtle.importKey(
     "raw",
-    base32Decode(secret),
+    secretBuffer,
     {
       name: "HMAC",
       hash: "SHA-1",
@@ -373,28 +429,31 @@ async function totpCode(secret: string, counter: number) {
     ["sign"],
   );
 
-  const buffer = new ArrayBuffer(8);
+  const counterBuffer = new ArrayBuffer(8);
+  const counterView = new DataView(counterBuffer);
 
-  const view = new DataView(buffer);
+  const high = Math.floor(counter / 0x100000000);
+  const low = counter >>> 0;
 
-  view.setUint32(0, Math.floor(counter / 2 ** 32));
+  counterView.setUint32(0, high);
+  counterView.setUint32(4, low);
 
-  view.setUint32(4, counter >>> 0);
+  const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, counterBuffer));
 
-  const digest = new Uint8Array(await crypto.subtle.sign("HMAC", key, buffer));
+  const offset = signature[signature.length - 1] & 0x0f;
 
-  const offset = digest[digest.length - 1] & 0x0f;
+  const binaryCode =
+    ((signature[offset] & 0x7f) << 24) |
+    ((signature[offset + 1] & 0xff) << 16) |
+    ((signature[offset + 2] & 0xff) << 8) |
+    (signature[offset + 3] & 0xff);
 
-  const binary =
-    ((digest[offset] & 0x7f) << 24) |
-    ((digest[offset + 1] & 0xff) << 16) |
-    ((digest[offset + 2] & 0xff) << 8) |
-    (digest[offset + 3] & 0xff);
+  const code = binaryCode % 1_000_000;
 
-  return String(binary % 1_000_000).padStart(6, "0");
+  return code.toString().padStart(6, "0");
 }
 
-async function verifyTotp(secret: string, code: string) {
+async function verifyTotp(secret: string, code: string): Promise<boolean> {
   const normalized = code.replace(/\D/g, "");
 
   if (normalized.length !== 6) {
@@ -412,11 +471,20 @@ async function verifyTotp(secret: string, code: string) {
   return false;
 }
 
-function totpUri(secret: string, email: string) {
-  return `otpauth://totp/Theo:${encodeURIComponent(
-    email,
-  )}?secret=${secret}&issuer=Theo&algorithm=SHA1&digits=6&period=30`;
+function totpUri(secret: string, email: string): string {
+  return (
+    `otpauth://totp/Theo:${encodeURIComponent(email)}` +
+    `?secret=${secret}` +
+    `&issuer=Theo` +
+    `&algorithm=SHA1` +
+    `&digits=6` +
+    `&period=30`
+  );
 }
+
+/* =========================================================
+   SESSÃO
+   ========================================================= */
 
 async function issueSession(
   env: Env,
@@ -432,9 +500,17 @@ async function issueSession(
 
   const nowDate = now();
 
-  const accessTtl = Number(env.ACCESS_TOKEN_TTL_SECONDS ?? 900);
+  const parsedAccessTtl = Number(env.ACCESS_TOKEN_TTL_SECONDS ?? 900);
 
-  const refreshTtl = Number(env.REFRESH_TOKEN_TTL_SECONDS ?? 2_592_000);
+  const parsedRefreshTtl = Number(env.REFRESH_TOKEN_TTL_SECONDS ?? 2_592_000);
+
+  const accessTtl =
+    Number.isFinite(parsedAccessTtl) && parsedAccessTtl > 0 ? Math.floor(parsedAccessTtl) : 900;
+
+  const refreshTtl =
+    Number.isFinite(parsedRefreshTtl) && parsedRefreshTtl > 0
+      ? Math.floor(parsedRefreshTtl)
+      : 2_592_000;
 
   await env.DB.prepare(
     `
@@ -478,8 +554,10 @@ async function issueSession(
         VALUES(?,?,?,?,?)
         ON CONFLICT(user_id,id)
         DO UPDATE SET
-          label = excluded.label,
-          last_seen_at = excluded.last_seen_at
+          label =
+            excluded.label,
+          last_seen_at =
+            excluded.last_seen_at
       `,
     )
       .bind(deviceId, user.id, deviceLabel, iso(), iso())
@@ -505,6 +583,10 @@ async function issueSession(
   };
 }
 
+/* =========================================================
+   JSON
+   ========================================================= */
+
 async function readJson(request: Request): Promise<Record<string, unknown> | null> {
   try {
     const body = await request.json();
@@ -518,6 +600,10 @@ async function readJson(request: Request): Promise<Record<string, unknown> | nul
     return null;
   }
 }
+
+/* =========================================================
+   AUTH REGISTER
+   ========================================================= */
 
 async function authRegister(request: Request, env: Env) {
   const body = await readJson(request);
@@ -548,7 +634,14 @@ async function authRegister(request: Request, env: Env) {
     );
   }
 
-  const existing = await env.DB.prepare("SELECT id FROM users WHERE email = ? OR cpf = ?")
+  const existing = await env.DB.prepare(
+    `
+        SELECT id
+        FROM users
+        WHERE email = ?
+           OR cpf = ?
+      `,
+  )
     .bind(email, cpf)
     .first();
 
@@ -563,9 +656,13 @@ async function authRegister(request: Request, env: Env) {
   }
 
   const id = uuid();
+
   const started = now();
 
-  const days = Number(env.TRIAL_DAYS ?? 7);
+  const parsedTrialDays = Number(env.TRIAL_DAYS ?? 7);
+
+  const days =
+    Number.isFinite(parsedTrialDays) && parsedTrialDays > 0 ? Math.floor(parsedTrialDays) : 7;
 
   const expires = new Date(started.getTime() + days * 86_400_000);
 
@@ -614,12 +711,17 @@ async function authRegister(request: Request, env: Env) {
   return jsonResponse(
     {
       message: `Conta criada. Seu período gratuito de ${days} dias começou.`,
+
       user: user ? publicUser(env, user) : null,
     },
     201,
     env,
   );
 }
+
+/* =========================================================
+   AUTH LOGIN
+   ========================================================= */
 
 async function authLogin(request: Request, env: Env) {
   const body = await readJson(request);
@@ -702,6 +804,10 @@ async function authLogin(request: Request, env: Env) {
     env,
   );
 }
+
+/* =========================================================
+   AUTH REFRESH
+   ========================================================= */
 
 async function authRefresh(request: Request, env: Env) {
   const body = await readJson(request);
@@ -791,14 +897,21 @@ async function authRefresh(request: Request, env: Env) {
   return jsonResponse(
     {
       access_token: accessToken,
+
       refresh_token: newRefresh,
+
       must_change_password: false,
+
       user: publicUser(env, user),
     },
     200,
     env,
   );
 }
+
+/* =========================================================
+   AUTH ME
+   ========================================================= */
 
 async function authMe(request: Request, env: Env) {
   const user = await requireAuth(request, env);
@@ -815,6 +928,10 @@ async function authMe(request: Request, env: Env) {
 
   return jsonResponse(publicUser(env, user), 200, env);
 }
+
+/* =========================================================
+   2FA SETUP
+   ========================================================= */
 
 async function auth2faSetup(request: Request, env: Env) {
   const user = await requireAuth(request, env);
@@ -853,6 +970,10 @@ async function auth2faSetup(request: Request, env: Env) {
     env,
   );
 }
+
+/* =========================================================
+   2FA ENABLE
+   ========================================================= */
 
 async function auth2faEnable(request: Request, env: Env) {
   const user = await requireAuth(request, env);
@@ -902,6 +1023,10 @@ async function auth2faEnable(request: Request, env: Env) {
   );
 }
 
+/* =========================================================
+   2FA DISABLE
+   ========================================================= */
+
 async function auth2faDisable(request: Request, env: Env) {
   const user = await requireAuth(request, env);
 
@@ -950,6 +1075,10 @@ async function auth2faDisable(request: Request, env: Env) {
     env,
   );
 }
+
+/* =========================================================
+   2FA VERIFY
+   ========================================================= */
 
 async function auth2faVerify(request: Request, env: Env) {
   const body = await readJson(request);
@@ -1038,6 +1167,10 @@ async function auth2faVerify(request: Request, env: Env) {
   );
 }
 
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
 async function authLogout(request: Request, env: Env) {
   const user = await requireAuth(request, env);
 
@@ -1078,6 +1211,10 @@ async function authLogout(request: Request, env: Env) {
   );
 }
 
+/* =========================================================
+   SUBSCRIPTION
+   ========================================================= */
+
 async function subscriptionStatus(request: Request, env: Env) {
   const user = await requireAuth(request, env);
 
@@ -1094,6 +1231,7 @@ async function subscriptionStatus(request: Request, env: Env) {
   return jsonResponse(
     {
       ...publicUser(env, user),
+
       access: accessFor(env, user),
     },
     200,
@@ -1101,9 +1239,17 @@ async function subscriptionStatus(request: Request, env: Env) {
   );
 }
 
-function normalizePath(pathname: string) {
+/* =========================================================
+   PATH
+   ========================================================= */
+
+function normalizePath(pathname: string): string {
   return pathname.replace(/\/+$/, "").replace(/^\/api/, "") || "/";
 }
+
+/* =========================================================
+   SYNC PUSH
+   ========================================================= */
 
 async function syncPush(request: Request, env: Env) {
   const user = await requireAuth(request, env);
@@ -1124,7 +1270,9 @@ async function syncPush(request: Request, env: Env) {
     return jsonResponse(
       {
         message: "Assinatura ou período gratuito expirado.",
+
         code: "SUBSCRIPTION_REQUIRED",
+
         access,
       },
       403,
@@ -1194,21 +1342,23 @@ async function syncPush(request: Request, env: Env) {
 
   const created = iso();
 
-  const stmt = env.DB.prepare(`
-      INSERT OR IGNORE INTO sync_events
-        (
-          event_id,
-          user_id,
-          device_id,
-          entity_type,
-          entity_id,
-          operation,
-          version,
-          payload_json,
-          created_at
-        )
-      VALUES (?,?,?,?,?,?,?,?,?)
-    `);
+  const stmt = env.DB.prepare(
+    `
+        INSERT OR IGNORE INTO sync_events
+          (
+            event_id,
+            user_id,
+            device_id,
+            entity_type,
+            entity_id,
+            operation,
+            version,
+            payload_json,
+            created_at
+          )
+        VALUES (?,?,?,?,?,?,?,?,?)
+      `,
+  );
 
   const prepared: {
     eventId: string;
@@ -1248,6 +1398,7 @@ async function syncPush(request: Request, env: Env) {
 
     prepared.push({
       eventId,
+
       statement: stmt.bind(
         eventId,
         user.id,
@@ -1293,13 +1444,19 @@ async function syncPush(request: Request, env: Env) {
   return jsonResponse(
     {
       accepted: accepted.length,
+
       ignored: ignored.length,
+
       event_ids: accepted,
     },
     200,
     env,
   );
 }
+
+/* =========================================================
+   SYNC PULL
+   ========================================================= */
 
 async function syncPull(request: Request, env: Env) {
   const user = await requireAuth(request, env);
@@ -1320,7 +1477,9 @@ async function syncPull(request: Request, env: Env) {
     return jsonResponse(
       {
         message: "Assinatura ou período gratuito expirado.",
+
         code: "SUBSCRIPTION_REQUIRED",
+
         access,
       },
       403,
@@ -1330,9 +1489,13 @@ async function syncPull(request: Request, env: Env) {
 
   const url = new URL(request.url);
 
-  const since = Math.max(0, Number(url.searchParams.get("since") ?? 0));
+  const rawSince = Number(url.searchParams.get("since") ?? 0);
 
-  const limit = Math.min(500, Math.max(1, Number(url.searchParams.get("limit") ?? 200)));
+  const rawLimit = Number(url.searchParams.get("limit") ?? 200);
+
+  const since = Number.isFinite(rawSince) ? Math.max(0, Math.floor(rawSince)) : 0;
+
+  const limit = Number.isFinite(rawLimit) ? Math.min(500, Math.max(1, Math.floor(rawLimit))) : 200;
 
   const rows = await env.DB.prepare(
     `
@@ -1367,7 +1530,9 @@ async function syncPull(request: Request, env: Env) {
         entity_id: row.entity_id,
         operation: row.operation,
         version: row.version,
+
         payload: row.payload_json ? JSON.parse(row.payload_json) : null,
+
         created_at: row.created_at,
       })),
 
@@ -1383,6 +1548,10 @@ async function syncPull(request: Request, env: Env) {
     env,
   );
 }
+
+/* =========================================================
+   SYNC BOOTSTRAP
+   ========================================================= */
 
 async function syncBootstrap(request: Request, env: Env) {
   const user = await requireAuth(request, env);
@@ -1403,7 +1572,9 @@ async function syncBootstrap(request: Request, env: Env) {
     return jsonResponse(
       {
         message: "Assinatura ou período gratuito expirado.",
+
         code: "SUBSCRIPTION_REQUIRED",
+
         access,
       },
       403,
@@ -1413,9 +1584,15 @@ async function syncBootstrap(request: Request, env: Env) {
 
   const url = new URL(request.url);
 
-  const since = Math.max(0, Number(url.searchParams.get("since") ?? 0));
+  const rawSince = Number(url.searchParams.get("since") ?? 0);
 
-  const limit = Math.min(1000, Math.max(1, Number(url.searchParams.get("limit") ?? 1000)));
+  const rawLimit = Number(url.searchParams.get("limit") ?? 1000);
+
+  const since = Number.isFinite(rawSince) ? Math.max(0, Math.floor(rawSince)) : 0;
+
+  const limit = Number.isFinite(rawLimit)
+    ? Math.min(1000, Math.max(1, Math.floor(rawLimit)))
+    : 1000;
 
   const rows = await env.DB.prepare(
     `
@@ -1441,7 +1618,12 @@ async function syncBootstrap(request: Request, env: Env) {
     .all();
 
   const lastSeq = await env.DB.prepare(
-    "SELECT MAX(seq) AS max_seq FROM sync_events WHERE user_id = ?",
+    `
+        SELECT
+          MAX(seq) AS max_seq
+        FROM sync_events
+        WHERE user_id = ?
+      `,
   )
     .bind(user.id)
     .first<{
@@ -1458,13 +1640,15 @@ async function syncBootstrap(request: Request, env: Env) {
         entity_id: row.entity_id,
         operation: row.operation,
         version: row.version,
+
         payload: row.payload_json ? JSON.parse(row.payload_json) : null,
+
         created_at: row.created_at,
       })),
 
       next_cursor: rows.results.length
         ? Number((rows.results[rows.results.length - 1] as any).seq)
-        : 0,
+        : since,
 
       server_cursor: Number(lastSeq?.max_seq ?? 0),
 
@@ -1477,11 +1661,11 @@ async function syncBootstrap(request: Request, env: Env) {
   );
 }
 
-async function paymentWebhook(request: Request, env: Env) {
-  // Propositalmente sem provedor embutido.
-  // A integração futura deve validar assinatura/autenticidade
-  // do provedor antes de alterar subscription_status.
+/* =========================================================
+   WEBHOOK
+   ========================================================= */
 
+async function paymentWebhook(request: Request, env: Env) {
   const secret = request.headers.get("x-theo-webhook-secret");
 
   if (!env.WEBHOOK_SECRET || secret !== env.WEBHOOK_SECRET) {
@@ -1514,7 +1698,9 @@ async function paymentWebhook(request: Request, env: Env) {
 
   await new D1SubscriptionService(env.DB).applyWebhook({
     userId,
+
     status: status as "active" | "expired" | "cancelled" | "past_due",
+
     expiresAt,
   });
 
@@ -1527,22 +1713,55 @@ async function paymentWebhook(request: Request, env: Env) {
   );
 }
 
+/* =========================================================
+   WORKER
+   ========================================================= */
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    /*
+     * CORS / Preflight
+     */
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
+
         headers: {
           "access-control-allow-origin": env.ALLOWED_ORIGIN ?? "*",
 
           "access-control-allow-headers": "Authorization, Content-Type",
 
           "access-control-allow-methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+
+          "access-control-max-age": "86400",
         },
       });
     }
 
-    try {
+    // Segunda rede de segurança: se qualquer coisa (inclusive um erro
+    // de runtime que o try/catch abaixo não consiga capturar) resultar
+    // numa resposta sem os headers de CORS, isso os adiciona de volta
+    // antes de devolver ao navegador. Evita que um 500 "cru" apareça
+    // no browser como falso erro de CORS.
+    const ensureCors = (response: Response): Response => {
+      if (response.headers.has("access-control-allow-origin")) {
+        return response;
+      }
+
+      const headers = new Headers(response.headers);
+
+      headers.set("access-control-allow-origin", env.ALLOWED_ORIGIN ?? "*");
+      headers.set("access-control-allow-headers", "Authorization, Content-Type");
+      headers.set("access-control-allow-methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    };
+
+    const handle = async (): Promise<Response> => {
       const path = normalizePath(new URL(request.url).pathname);
 
       if (request.method === "POST" && path === "/auth/register") {
@@ -1608,15 +1827,25 @@ export default {
         404,
         env,
       );
+    };
+
+    try {
+      return ensureCors(await handle());
     } catch (error) {
       console.error("[Theo Worker]", error);
 
-      return jsonResponse(
-        {
-          message: "Erro interno.",
-        },
-        500,
-        env,
+      const message = error instanceof Error ? error.message : String(error);
+
+      return ensureCors(
+        jsonResponse(
+          {
+            message: "Erro interno no servidor.",
+
+            error: message,
+          },
+          500,
+          env,
+        ),
       );
     }
   },

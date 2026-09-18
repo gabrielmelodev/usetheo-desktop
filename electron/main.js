@@ -1202,8 +1202,6 @@ function createWindow() {
 // ============================================================
 
 app.whenReady().then(() => {
-  registerGoogleDriveIpc();
-
   console.log("[Theo] UserData:", app.getPath("userData"));
 
   console.log("[Theo] Cache:", app.getPath("cache"));

@@ -1,0 +1,15 @@
+{
+	"name": "usetheo-desktop",
+	"compatibility_date": "2026-09-18",
+	"assets": {
+		"directory": "./dist",
+	},
+	"d1_databases": [
+		{
+			"binding": "theo",
+			"database_name": "theo",
+			"database_id": "b935c704-16ed-4418-837d-ad06fa612662",
+			"remote": true
+		}
+	],
+}
