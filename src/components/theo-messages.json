@@ -1,0 +1,34 @@
+{
+  "messages": [
+    {
+      "id": "constancia-001",
+      "message": "Um pouco todos os dias. O resultado vem com a constância.",
+      "hasLetter": false,
+      "letterTitle": "Uma carta para você"
+    },
+    {
+      "id": "disciplina-001",
+      "message": "Disciplina é continuar mesmo quando a motivação diminui.",
+      "hasLetter": false,
+      "letterTitle": "Uma carta para você"
+    },
+    {
+      "id": "foco-001",
+      "message": "Não precisa fazer tudo hoje. Precisa continuar.",
+      "hasLetter": false,
+      "letterTitle": "Uma carta para você"
+    },
+    {
+      "id": "estudo-001",
+      "message": "Cada página estudada hoje reduz a distância até o seu objetivo.",
+      "hasLetter": false,
+      "letterTitle": "Uma carta para você"
+    },
+    {
+      "id": "persistencia-001",
+      "message": "O progresso silencioso também é progresso.",
+      "hasLetter": false,
+      "letterTitle": "Uma carta para você"
+    }
+  ]
+}

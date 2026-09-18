@@ -1,0 +1,666 @@
+@import "@fontsource/barlow/400.css";
+
+@import "@fontsource/barlow/500.css";
+
+@import "@fontsource/barlow/600.css";
+
+@import "@fontsource/barlow/700.css";
+
+@import "@fontsource/barlow/800.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================
+   THEO — GOOGLE / MATERIAL DARK
+   ========================================================= */
+
+:root {
+  --bg: #202124;
+  --surface: #292a2d;
+  --surface-hover: #303134;
+  --surface-active: #3c4043;
+
+  --border: #3c4043;
+  --border-soft: rgba(255, 255, 255, 0.08);
+
+  --text: #e8eaed;
+  --text-secondary: #bdc1c6;
+  --text-muted: #9aa0a6;
+
+  --primary: #8ab4f8;
+  --primary-hover: #8ab4f8;
+  --primary-soft: rgba(168, 201, 127, 0.12);
+
+  --link: #8ab4f8;
+
+  --danger: #f28b82;
+  --warning: #fdd663;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15);
+
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.28), 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+
+  font-family:
+    "Roboto",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Evita seleção acidental em elementos da interface */
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+/* =========================================================
+   SELEÇÃO
+   ========================================================= */
+
+::selection {
+  background: rgba(168, 201, 127, 0.35);
+  color: #ffffff;
+}
+
+/* =========================================================
+   ELECTRON
+   ========================================================= */
+
+.drag {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* =========================================================
+   SCROLLBAR — MATERIAL
+   ========================================================= */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #5f6368 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #5f6368;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #80868b;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+input,
+textarea {
+  color: var(--text);
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+
+  outline: none;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 1px var(--primary),
+    0 0 0 3px rgba(168, 201, 127, 0.08);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* =========================================================
+   RICH EDITOR — TIPTAP
+   ========================================================= */
+
+.rich-editor {
+  width: 100%;
+  position: relative;
+}
+
+.rich-editor .tiptap {
+  width: 100%;
+
+  min-height: 180px;
+  max-height: 220px;
+
+  overflow-y: auto;
+
+  padding: 12px 14px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+
+  background: var(--surface);
+  color: var(--text);
+
+  font-size: 14px;
+  line-height: 1.65;
+
+  outline: none;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.rich-editor .tiptap:focus {
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 1px var(--primary),
+    0 0 0 3px rgba(168, 201, 127, 0.08);
+}
+
+.tiptap:focus-visible {
+  outline: none;
+}
+
+/* =========================================================
+   PLACEHOLDER
+   ========================================================= */
+
+.rich-editor .tiptap.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+
+  color: var(--text-muted);
+
+  pointer-events: none;
+
+  position: absolute;
+
+  opacity: 0.8;
+}
+
+/* =========================================================
+   PARÁGRAFOS
+   ========================================================= */
+
+.rich-editor .tiptap p {
+  margin: 6px 0;
+}
+
+/* =========================================================
+   TÍTULOS
+   ========================================================= */
+
+.rich-editor .tiptap h1,
+.rich-editor .tiptap h2,
+.rich-editor .tiptap h3 {
+  color: var(--text);
+
+  letter-spacing: -0.015em;
+}
+
+.rich-editor .tiptap h1 {
+  font-size: 1.65rem;
+  line-height: 1.25;
+  font-weight: 500;
+
+  margin: 20px 0 10px;
+}
+
+.rich-editor .tiptap h2 {
+  font-size: 1.35rem;
+  line-height: 1.3;
+  font-weight: 500;
+
+  margin: 18px 0 8px;
+}
+
+.rich-editor .tiptap h3 {
+  font-size: 1.1rem;
+  line-height: 1.35;
+  font-weight: 500;
+
+  margin: 16px 0 6px;
+}
+
+/* =========================================================
+   LISTAS
+   ========================================================= */
+
+.rich-editor .tiptap ul {
+  list-style-type: disc;
+  padding-left: 24px;
+  margin: 8px 0;
+}
+
+.rich-editor .tiptap ol {
+  list-style-type: decimal;
+  padding-left: 24px;
+  margin: 8px 0;
+}
+
+.rich-editor .tiptap li {
+  padding-left: 3px;
+}
+
+/* =========================================================
+   TASK LIST / CHECKBOX
+   ========================================================= */
+
+.rich-editor .tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.rich-editor .tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  margin: 6px 0;
+}
+
+.rich-editor .tiptap ul[data-type="taskList"] li > label {
+  margin-top: 4px;
+}
+
+.rich-editor .tiptap ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+.rich-editor .tiptap a {
+  color: var(--link);
+
+  text-decoration: none;
+
+  border-bottom: 1px solid transparent;
+
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.rich-editor .tiptap a:hover {
+  color: #aecbfa;
+  border-bottom-color: currentColor;
+}
+
+/* =========================================================
+   HIGHLIGHT
+   ========================================================= */
+
+.rich-editor .tiptap mark {
+  background: rgba(253, 214, 99, 0.28);
+  color: inherit;
+
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+/* =========================================================
+   CÓDIGO INLINE
+   ========================================================= */
+
+.rich-editor .tiptap code {
+  font-family: "Roboto Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 0.9em;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  padding: 2px 5px;
+
+  border-radius: 5px;
+
+  color: #e8eaed;
+}
+
+/* =========================================================
+   BLOCO DE CÓDIGO
+   ========================================================= */
+
+.rich-editor .tiptap pre {
+  background: #17181a;
+
+  border: 1px solid var(--border-soft);
+
+  padding: 14px 16px;
+
+  border-radius: var(--radius-md);
+
+  overflow-x: auto;
+
+  margin: 14px 0;
+}
+
+.rich-editor .tiptap pre code {
+  background: transparent;
+  padding: 0;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   CITAÇÃO
+   ========================================================= */
+
+.rich-editor .tiptap blockquote {
+  border-left: 3px solid var(--primary);
+
+  margin: 14px 0;
+
+  padding: 8px 16px;
+
+  color: var(--text-secondary);
+
+  background: rgba(168, 201, 127, 0.04);
+
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* =========================================================
+   TABELAS
+   ========================================================= */
+
+.rich-editor .tiptap table {
+  width: 100%;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  margin: 16px 0;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+
+  overflow: hidden;
+}
+
+.rich-editor .tiptap td,
+.rich-editor .tiptap th {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+
+  padding: 9px 12px;
+
+  text-align: left;
+}
+
+.rich-editor .tiptap th {
+  background: var(--surface-hover);
+  font-weight: 500;
+}
+
+.rich-editor .tiptap tr:last-child td {
+  border-bottom: none;
+}
+
+.rich-editor .tiptap td:last-child,
+.rich-editor .tiptap th:last-child {
+  border-right: none;
+}
+
+/* =========================================================
+   THEO NOTES — PÁGINA
+   ========================================================= */
+
+.notes-editor .tiptap {
+  max-height: none;
+
+  min-height: 55vh;
+
+  overflow-y: visible;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  box-shadow: none;
+
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.notes-editor .tiptap:focus {
+  border: none;
+  box-shadow: none;
+}
+
+/* =========================================================
+   DESK / TEXTURA
+   ========================================================= */
+
+.desk-grain {
+  background-image: theme("backgroundImage.grain");
+
+  background-size: 4px 4px;
+
+  background-color: var(--bg);
+}
+
+/* =========================================================
+   CARDS / SUPERFÍCIES
+   ========================================================= */
+
+.theo-surface {
+  background: var(--surface);
+
+  border: 1px solid var(--border-soft);
+
+  border-radius: var(--radius-lg);
+
+  box-shadow: var(--shadow-1);
+}
+
+.theo-surface:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* =========================================================
+   BOTÃO MATERIAL
+   ========================================================= */
+
+.theo-button {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 40px;
+
+  padding: 0 16px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: var(--primary);
+  color: #202124;
+
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 80ms ease;
+}
+
+.theo-button:hover {
+  background: var(--primary-hover);
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.theo-button:active {
+  transform: scale(0.98);
+}
+
+.theo-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   BOTÃO SECUNDÁRIO
+   ========================================================= */
+
+.theo-button-secondary {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 40px;
+
+  padding: 0 16px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 999px;
+
+  background: transparent;
+
+  color: var(--text-secondary);
+
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.theo-button-secondary:hover {
+  background: var(--surface-hover);
+
+  border-color: #5f6368;
+
+  color: var(--text);
+}
+
+/* =========================================================
+   FLASHCARD
+   ========================================================= */
+
+.flip-scene {
+  perspective: 1600px;
+}
+
+.flip-card {
+  position: relative;
+
+  transform-style: preserve-3d;
+
+  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flip-card.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  position: absolute;
+
+  inset: 0;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-face-back {
+  transform: rotateY(180deg);
+}
+
+/* =========================================================
+   REDUÇÃO DE MOVIMENTO
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .flip-card {
+    transition: none;
+  }
+}

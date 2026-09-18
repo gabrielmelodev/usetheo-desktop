@@ -1,0 +1,583 @@
+/* ============================================================
+   THEO DESIGN SYSTEM
+   Google / Material 3 inspired
+   ------------------------------------------------------------
+   Filosofia:
+   - superfícies limpas
+   - elevação discreta
+   - tipografia racional
+   - accent usado com parcimônia
+   - foco em leitura e produtividade
+   ============================================================ */
+
+/* ============================================================
+   1. PALETA BASE
+   ============================================================ */
+
+:root {
+  /* Accent — oliva do Theo */
+  --sage-0: #000000;
+  --sage-10: #101b04;
+  --sage-20: #1d2b0a;
+  --sage-30: #304216;
+  --sage-40: #496229;
+  --sage-50: #617b3d;
+  --sage-60: #789552;
+  --sage-70: #91ae69;
+  --sage-80: #aac883;
+  --sage-90: #c5e49d;
+  --sage-95: #d8f2b1;
+  --sage-99: #f8ffef;
+  --sage-100: #ffffff;
+
+  /* Neutros */
+  --neutral-4: #0b0d0a;
+  --neutral-6: #10120f;
+  --neutral-10: #171a16;
+  --neutral-12: #1b1e1a;
+  --neutral-17: #252823;
+  --neutral-20: #2d302b;
+  --neutral-24: #363934;
+  --neutral-30: #454842;
+  --neutral-40: #5d6059;
+  --neutral-50: #747870;
+  --neutral-60: #8d9188;
+  --neutral-70: #a7aaa2;
+  --neutral-80: #c1c5bb;
+  --neutral-90: #dfe3d9;
+  --neutral-94: #ecefe6;
+  --neutral-96: #f2f5ec;
+  --neutral-98: #f8faf4;
+  --neutral-100: #ffffff;
+
+  /* Feedback */
+  --red-30: #8c1d18;
+  --red-40: #b3261e;
+  --red-80: #f2b8b5;
+
+  --amber-40: #8a5300;
+  --amber-80: #ffb951;
+
+  --blue-40: #1d5fbf;
+  --blue-80: #a8c8ff;
+
+  --green-40: #1f6b3a;
+  --green-80: #8fdba6;
+}
+
+/* ============================================================
+   2. TEMA ESCURO
+   ============================================================ */
+
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Background */
+  --color-background: var(--neutral-6);
+  --color-surface: var(--neutral-6);
+  --color-surface-dim: var(--neutral-4);
+
+  /* Surface hierarchy */
+  --color-surface-container-low: var(--neutral-10);
+  --color-surface-container: var(--neutral-12);
+  --color-surface-container-high: var(--neutral-17);
+  --color-surface-container-highest: var(--neutral-20);
+
+  /* Legacy aliases */
+  --color-surface-1: var(--color-surface-container-low);
+  --color-surface-2: var(--color-surface-container);
+  --color-surface-3: var(--color-surface-container-high);
+  --color-surface-4: var(--color-surface-container-highest);
+  --color-surface-5: var(--neutral-24);
+
+  /* Texto */
+  --color-on-surface: var(--neutral-94);
+  --color-on-surface-variant: var(--neutral-80);
+  --color-on-surface-faint: var(--neutral-60);
+
+  /* Bordas */
+  --color-outline: var(--neutral-50);
+  --color-outline-variant: rgba(224, 230, 217, 0.12);
+  --color-border: rgba(224, 230, 217, 0.1);
+
+  /* Primary */
+  --color-primary: var(--sage-80);
+  --color-on-primary: var(--sage-20);
+
+  --color-primary-hover: var(--sage-90);
+  --color-primary-pressed: var(--sage-70);
+
+  --color-primary-container: var(--sage-30);
+  --color-on-primary-container: var(--sage-90);
+
+  --color-primary-soft: rgba(170, 200, 131, 0.1);
+
+  /* Estados */
+  --color-hover: rgba(255, 255, 255, 0.06);
+  --color-hover-strong: rgba(255, 255, 255, 0.1);
+
+  --color-pressed: rgba(255, 255, 255, 0.12);
+
+  --color-disabled: rgba(255, 255, 255, 0.38);
+  --color-disabled-container: rgba(255, 255, 255, 0.12);
+
+  /* Feedback */
+  --color-error: var(--red-80);
+  --color-on-error: var(--red-30);
+  --color-error-soft: rgba(242, 184, 181, 0.1);
+
+  --color-success: var(--green-80);
+  --color-warning: var(--amber-80);
+  --color-info: var(--blue-80);
+
+  /* SRS */
+  --color-again: #ef9a95;
+  --color-hard: var(--amber-80);
+  --color-good: var(--sage-80);
+  --color-easy: var(--blue-80);
+  --color-streak: #ffca7a;
+
+  /* Modal */
+  --color-scrim: rgba(0, 0, 0, 0.55);
+
+  /* Elevação */
+  --elevation-0: none;
+
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.28);
+
+  --elevation-2: 0 2px 6px rgba(0, 0, 0, 0.25);
+
+  --elevation-3: 0 4px 12px rgba(0, 0, 0, 0.28);
+}
+
+/* ============================================================
+   3. TEMA CLARO
+   ============================================================ */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Background */
+  --color-background: var(--neutral-98);
+  --color-surface: var(--neutral-98);
+  --color-surface-dim: var(--neutral-90);
+
+  /* Surface hierarchy */
+  --color-surface-container-low: var(--neutral-96);
+  --color-surface-container: var(--neutral-94);
+  --color-surface-container-high: var(--neutral-90);
+  --color-surface-container-highest: #e4e8df;
+
+  /* Legacy aliases */
+  --color-surface-1: var(--color-surface-container-low);
+  --color-surface-2: var(--color-surface-container);
+  --color-surface-3: var(--color-surface-container-high);
+  --color-surface-4: var(--color-surface-container-highest);
+  --color-surface-5: #d8dcd3;
+
+  /* Texto */
+  --color-on-surface: var(--neutral-100);
+  --color-on-surface-variant: var(--neutral-30);
+  --color-on-surface-faint: var(--neutral-50);
+
+  /* Bordas */
+  --color-outline: var(--neutral-50);
+  --color-outline-variant: rgba(23, 29, 20, 0.12);
+  --color-border: rgba(23, 29, 20, 0.1);
+
+  /* Primary */
+  --color-primary: var(--sage-40);
+  --color-on-primary: #ffffff;
+
+  --color-primary-hover: var(--sage-30);
+  --color-primary-pressed: var(--sage-50);
+
+  --color-primary-container: var(--sage-90);
+  --color-on-primary-container: var(--sage-10);
+
+  --color-primary-soft: rgba(73, 98, 41, 0.08);
+
+  /* Estados */
+  --color-hover: rgba(23, 29, 20, 0.05);
+  --color-hover-strong: rgba(23, 29, 20, 0.08);
+
+  --color-pressed: rgba(23, 29, 20, 0.12);
+
+  --color-disabled: rgba(23, 29, 20, 0.38);
+  --color-disabled-container: rgba(23, 29, 20, 0.12);
+
+  /* Feedback */
+  --color-error: var(--red-40);
+  --color-on-error: #ffffff;
+  --color-error-soft: rgba(179, 38, 30, 0.08);
+
+  --color-success: var(--green-40);
+  --color-warning: var(--amber-40);
+  --color-info: var(--blue-40);
+
+  /* SRS */
+  --color-again: #c5321f;
+  --color-hard: var(--amber-40);
+  --color-good: var(--sage-40);
+  --color-easy: var(--blue-40);
+  --color-streak: #a06a00;
+
+  /* Modal */
+  --color-scrim: rgba(23, 29, 20, 0.32);
+
+  /* Elevação */
+  --elevation-0: none;
+
+  --elevation-1: 0 1px 2px rgba(23, 29, 20, 0.08);
+
+  --elevation-2: 0 2px 6px rgba(23, 29, 20, 0.1);
+
+  --elevation-3: 0 4px 12px rgba(23, 29, 20, 0.12);
+}
+
+/* ============================================================
+   4. TIPOGRAFIA
+   ============================================================ */
+
+:root {
+  --font-sans: "Google Sans", "Roboto", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --font-display: "Google Sans", "Roboto", "Inter", system-ui, sans-serif;
+
+  --font-mono: "JetBrains Mono", "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --text-scale: 1;
+
+  /* Display */
+  --text-display: calc(2rem * var(--text-scale));
+
+  /* Headlines */
+  --text-headline: calc(1.5rem * var(--text-scale));
+
+  /* Titles */
+  --text-title-lg: calc(1.25rem * var(--text-scale));
+
+  --text-title: calc(1.0625rem * var(--text-scale));
+
+  /* Body */
+  --text-body-lg: calc(1rem * var(--text-scale));
+
+  --text-body: calc(0.9375rem * var(--text-scale));
+
+  --text-body-sm: calc(0.875rem * var(--text-scale));
+
+  /* Labels */
+  --text-label: calc(0.8125rem * var(--text-scale));
+
+  --text-label-sm: calc(0.75rem * var(--text-scale));
+
+  /* Line-height */
+  --leading-tight: 1.2;
+  --leading-snug: 1.4;
+  --leading-normal: 1.55;
+  --leading-relaxed: 1.7;
+
+  /* Reading measure */
+  --measure: 68ch;
+}
+
+:root[data-text-size="sm"] {
+  --text-scale: 0.9375;
+}
+
+:root[data-text-size="md"] {
+  --text-scale: 1;
+}
+
+:root[data-text-size="lg"] {
+  --text-scale: 1.125;
+}
+
+:root[data-text-size="xl"] {
+  --text-scale: 1.28;
+}
+
+/* ============================================================
+   5. ESPAÇAMENTO / DENSIDADE
+   ============================================================ */
+
+:root {
+  --density: 1;
+
+  --space-1: calc(0.25rem * var(--density));
+  --space-2: calc(0.5rem * var(--density));
+  --space-3: calc(0.75rem * var(--density));
+  --space-4: calc(1rem * var(--density));
+  --space-5: calc(1.25rem * var(--density));
+  --space-6: calc(1.5rem * var(--density));
+  --space-8: calc(2rem * var(--density));
+  --space-10: calc(2.5rem * var(--density));
+
+  /* Controles */
+  --control-h: calc(2.5rem * var(--density) * var(--text-scale));
+
+  --control-h-lg: calc(3rem * var(--density) * var(--text-scale));
+
+  /* Forma */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  /* Movimento */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+:root[data-density="compact"] {
+  --density: 0.85;
+}
+
+:root[data-density="comfortable"] {
+  --density: 1;
+}
+
+:root[data-density="spacious"] {
+  --density: 1.18;
+}
+
+/* ============================================================
+   6. BASE
+   ============================================================ */
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+html {
+  background: var(--color-background);
+}
+
+body {
+  margin: 0;
+
+  background: var(--color-background);
+
+  color: var(--color-on-surface);
+
+  font-family: var(--font-sans);
+
+  font-size: var(--text-body);
+
+  line-height: var(--leading-normal);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  text-rendering: optimizeLegibility;
+}
+
+/* ============================================================
+   7. ELEMENTOS GLOBAIS
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Seleção */
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* ============================================================
+   8. FOCO
+   ============================================================ */
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+
+  outline-offset: 2px;
+
+  border-radius: var(--radius-xs);
+}
+
+/* ============================================================
+   9. SCROLLBAR
+   ============================================================ */
+
+* {
+  scrollbar-width: thin;
+
+  scrollbar-color: var(--color-surface-5) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-surface-5);
+
+  border: 2px solid transparent;
+
+  background-clip: content-box;
+
+  border-radius: var(--radius-full);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-outline);
+
+  background-clip: content-box;
+}
+
+/* ============================================================
+   10. UTILITÁRIOS DE TEXTO
+   ============================================================ */
+
+.text-fit-xs {
+  font-size: clamp(var(--text-body), 2.2vw, var(--text-title));
+}
+
+.text-fit-md {
+  font-size: clamp(var(--text-title), 3.4vw, var(--text-headline));
+}
+
+.text-fit-lg {
+  font-size: clamp(var(--text-headline), 5vw, var(--text-display));
+}
+
+/* ============================================================
+   11. CLAMP
+   ============================================================ */
+
+.clamp-1,
+.clamp-2,
+.clamp-3 {
+  display: -webkit-box;
+
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+}
+
+.clamp-1 {
+  -webkit-line-clamp: 1;
+}
+
+.clamp-2 {
+  -webkit-line-clamp: 2;
+}
+
+.clamp-3 {
+  -webkit-line-clamp: 3;
+}
+
+/* ============================================================
+   12. LEITURA
+   ============================================================ */
+
+.prose-theo {
+  width: 100%;
+
+  max-width: var(--measure);
+
+  font-size: var(--text-body-lg);
+
+  line-height: var(--leading-relaxed);
+}
+
+.text-text {
+  color: #ffffff !important;
+}
+
+.prose-theo p {
+  margin: 0 0 var(--space-4);
+}
+
+.prose-theo p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-theo p + p {
+  margin-top: var(--space-3);
+}
+
+.prose-theo img {
+  display: block;
+
+  max-width: 100%;
+  height: auto;
+
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   13. INTERAÇÃO GENÉRICA
+   ============================================================ */
+
+.interactive {
+  transition:
+    background-color var(--motion-fast) var(--ease-standard),
+    border-color var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-base) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+}
+
+.interactive:hover {
+  background: var(--color-hover);
+}
+
+.interactive:active {
+  background: var(--color-pressed);
+}
+
+/* ============================================================
+   14. ACESSIBILIDADE / REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 1ms;
+    --motion-base: 1ms;
+    --motion-slow: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}

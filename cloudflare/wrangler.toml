@@ -1,0 +1,16 @@
+name = "theo-api"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "theo"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[vars]
+ACCESS_TOKEN_TTL_SECONDS = "900"
+REFRESH_TOKEN_TTL_SECONDS = "2592000"
+TRIAL_DAYS = "7"
+ALLOWED_ORIGIN = "*"
+
+# Defina JWT_SECRET e WEBHOOK_SECRET com `wrangler secret put`.
