@@ -16,7 +16,6 @@ import Study from "./pages/Study";
 import TitleBar from "./components/TitleBar";
 import Account from "./pages/Account";
 import ErrorNotebook from "./pages/ErrorNotebook";
-import Notes from "./pages/Notes";
 
 export default function App() {
   return (
@@ -37,7 +36,7 @@ export default function App() {
             <Route path="/conta" element={<Account />} />
             <Route path="/editais" element={<Editais />} />
             <Route path="/erro" element={<ErrorNotebook />} />
-            <Route path="/notes" element={<Notes />} />
+
             <Route path="/editais/:id" element={<ExamDetail />} />
 
             {/* Só estas duas dependem do servidor + de uma conta. */}
